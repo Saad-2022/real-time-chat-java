@@ -3,21 +3,22 @@ package src.chat.server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.text.SimpleDateFormat;
 
 public class Server {
     private static final int PORT = 1234;
     private static Vector<ClientHandler> clients = new Vector<>();
+    private static Set<String> nicknames = new HashSet<>();
 
     public static void main(String[] args) {
-        System.out.println("Server starting on port " + PORT + "...");
+        System.out.println("Server running on port " + PORT + "...");
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("New client connected: " + clientSocket);
+                System.out.println("New connection: " + clientSocket);
 
                 ClientHandler clientThread = new ClientHandler(clientSocket);
-                clients.add(clientThread);
                 clientThread.start();
             }
         } catch (IOException e) {
@@ -35,46 +36,70 @@ public class Server {
 
     public static void removeClient(ClientHandler client) {
         clients.remove(client);
-        System.out.println("Client disconnected.");
+        nicknames.remove(client.getNickname());
+        System.out.println("Client disconnected: " + client.getNickname());
+        broadcast("[" + client.getNickname() + "] has left the chat.", null);
     }
 
     private static class ClientHandler extends Thread {
         private Socket socket;
         private BufferedReader in;
         private PrintWriter out;
+        private String nickname;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
-            try {
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
-            } catch (IOException e) {
-                System.err.println("Error setting up I/O for client: " + e.getMessage());
-            }
         }
 
-        public void run() {
-            String message;
-            try {
-                out.println("Connected to chat server.");
-                while ((message = in.readLine()) != null) {
-                    System.out.println("Received: " + message);
-                    Server.broadcast(message, this);
-                }
-            } catch (IOException e) {
-                System.err.println("Client disconnected unexpectedly: " + e.getMessage());
-            } finally {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    System.err.println("Failed to close socket: " + e.getMessage());
-                }
-                Server.removeClient(this);
-            }
+        public String getNickname() {
+            return nickname;
         }
 
         public void sendMessage(String message) {
             out.println(message);
+        }
+
+        public void run() {
+            try {
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                out = new PrintWriter(socket.getOutputStream(), true);
+
+                // Get nickname
+                while (true) {
+                    out.println("Enter your nickname:");
+                    nickname = in.readLine();
+
+                    if (nickname == null || nickname.trim().isEmpty()) {
+                        out.println("Nickname cannot be empty.");
+                    } else if (nicknames.contains(nickname)) {
+                        out.println("Nickname already in use. Choose another.");
+                    } else {
+                        nicknames.add(nickname);
+                        clients.add(this);
+                        out.println("Welcome, " + nickname + "!");
+                        broadcast("[" + nickname + "] has joined the chat.", this);
+                        break;
+                    }
+                }
+
+                String clientMessage;
+                while ((clientMessage = in.readLine()) != null) {
+                    String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                    String formattedMessage = "[" + timestamp + "] [" + nickname + "]: " + clientMessage;
+                    System.out.println(formattedMessage);
+                    broadcast(formattedMessage, this);
+                }
+
+            } catch (IOException e) {
+                System.err.println("Connection error with client: " + e.getMessage());
+            } finally {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    System.err.println("Socket close failed: " + e.getMessage());
+                }
+                removeClient(this);
+            }
         }
     }
 }
