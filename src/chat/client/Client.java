@@ -14,9 +14,13 @@ public class Client {
                 PrintWriter serverWriter = new PrintWriter(socket.getOutputStream(), true);
                 BufferedReader userInputReader = new BufferedReader(new InputStreamReader(System.in))
         ) {
-            System.out.println("Connected to chat server at " + SERVER_IP + ":" + SERVER_PORT);
+            System.out.print("Enter your nickname: ");
+            String nickname = userInputReader.readLine();
+            serverWriter.println(nickname);  // Send nickname to server
 
-            // Thread to read messages from server
+            System.out.println("Connected to chat server as " + nickname);
+            System.out.println("Type '/exit' to leave the chat.");
+
             Thread readThread = new Thread(() -> {
                 String serverMessage;
                 try {
@@ -24,15 +28,19 @@ public class Client {
                         System.out.println(serverMessage);
                     }
                 } catch (IOException e) {
-                    System.err.println("Connection closed or error reading from server.");
+                    System.err.println("Disconnected from server.");
                 }
             });
 
-            // Thread to send user input to server
             Thread writeThread = new Thread(() -> {
                 String userMessage;
                 try {
                     while ((userMessage = userInputReader.readLine()) != null) {
+                        if (userMessage.equalsIgnoreCase("/exit")) {
+                            System.out.println("You have left the chat.");
+                            socket.close();
+                            break;
+                        }
                         serverWriter.println(userMessage);
                     }
                 } catch (IOException e) {
@@ -43,12 +51,11 @@ public class Client {
             readThread.start();
             writeThread.start();
 
-            // Wait for both threads to finish
             readThread.join();
             writeThread.join();
 
         } catch (IOException | InterruptedException e) {
-            System.err.println("Unable to connect to server: " + e.getMessage());
+            System.err.println("Connection failed: " + e.getMessage());
         }
     }
 }
