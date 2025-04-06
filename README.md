@@ -32,6 +32,15 @@ License info
 ![Screenshot (93)](https://github.com/user-attachments/assets/8d028575-0587-42af-9d14-0d3d554381f1)
 ![Screenshot (94)](https://github.com/user-attachments/assets/97601c41-cf48-41f8-9fbb-4a8332bc942c)
 
+## Added Nickname handling + Timestamps to Server.java Commit Screenshots:
+![Screenshot (95)](https://github.com/user-attachments/assets/f2b5bf65-1c91-46a6-870c-3a7c788ee0ef)
+![Screenshot (98)](https://github.com/user-attachments/assets/f7f80ddd-6ebe-487f-8b43-3dea777d61f1)
+![Screenshot (96)](https://github.com/user-attachments/assets/3a8421ba-2d91-483b-8277-e3590a7409e0)
+![Screenshot (97)](https://github.com/user-attachments/assets/a9498910-33a9-4aa4-8540-b767326e2812)
+![Screenshot (99)](https://github.com/user-attachments/assets/6847c25b-347b-4d78-a782-21fea3c32042)
+![Screenshot (100)](https://github.com/user-attachments/assets/46bd7321-035a-43ba-a66f-4d5996027e4a)
+
+
 
 
 
