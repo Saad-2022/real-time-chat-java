@@ -61,6 +61,11 @@ License info
 ![Screenshot (113)](https://github.com/user-attachments/assets/7e299bd2-7051-43d0-877c-8a3e20cde93e)
 ![Screenshot (117)](https://github.com/user-attachments/assets/d92d74d1-2776-4d6f-a6fc-d697771dd0e7)
 
+## Added private messaging to UIClient.java and Server.java Commit Screenshots:
+![Screenshot (118)](https://github.com/user-attachments/assets/498dace7-52c2-4999-a4b2-27e0053df615)
+![Screenshot (119)](https://github.com/user-attachments/assets/a9cb4979-e8d0-42d9-a976-3ee0807100ad)
+
+
 
 
 
