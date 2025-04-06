@@ -50,6 +50,18 @@ License info
 ![Screenshot (107)](https://github.com/user-attachments/assets/38dbade8-1bae-404f-808c-3c59a997e53d)
 ![Screenshot (108)](https://github.com/user-attachments/assets/344ed544-7154-4b20-82b1-56065d86278d)
 
+## Added active user list and timestamped chat to ChatGUIClient.java Commit Screenshots:
+![Screenshot (109)](https://github.com/user-attachments/assets/3933dcf4-3c83-43c6-a0ba-1be1e1540ebb)
+![Screenshot (111)](https://github.com/user-attachments/assets/f6e9c9fe-d98d-478d-be3e-bceeaff9aec1)
+![Screenshot (110)](https://github.com/user-attachments/assets/8ca7e52d-abae-4d82-9a1e-471e577e0962)
+![Screenshot (114)](https://github.com/user-attachments/assets/8a4446a4-617a-4fb0-aa3d-f32a12ca401b)
+![Screenshot (112)](https://github.com/user-attachments/assets/14f6cf20-00a7-44ce-99c3-87f41ab9868c)
+![Screenshot (115)](https://github.com/user-attachments/assets/2bb0b2f3-b871-4215-8708-6a58832d4e23)
+![Screenshot (116)](https://github.com/user-attachments/assets/dbc1a80d-4a46-4039-8e16-fff1c884a354)
+![Screenshot (113)](https://github.com/user-attachments/assets/7e299bd2-7051-43d0-877c-8a3e20cde93e)
+![Screenshot (117)](https://github.com/user-attachments/assets/d92d74d1-2776-4d6f-a6fc-d697771dd0e7)
+
+
 
 
 
