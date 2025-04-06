@@ -34,11 +34,27 @@ public class Server {
         }
     }
 
+    public static void broadcastUserList() {
+        StringBuilder sb = new StringBuilder("/users:");
+        for (ClientHandler client : clients) {
+            sb.append(client.getNickname()).append(",");
+        }
+        if (!clients.isEmpty()) {
+            sb.setLength(sb.length() - 1); // remove trailing comma
+        }
+
+        String userListMessage = sb.toString();
+        for (ClientHandler client : clients) {
+            client.sendMessage(userListMessage);
+        }
+    }
+
     public static void removeClient(ClientHandler client) {
         clients.remove(client);
         nicknames.remove(client.getNickname());
         System.out.println("Client disconnected: " + client.getNickname());
         broadcast("[" + client.getNickname() + "] has left the chat.", null);
+        broadcastUserList();
     }
 
     private static class ClientHandler extends Thread {
@@ -78,16 +94,21 @@ public class Server {
                         clients.add(this);
                         out.println("Welcome, " + nickname + "!");
                         broadcast("[" + nickname + "] has joined the chat.", this);
+                        broadcastUserList();
                         break;
                     }
                 }
 
                 String clientMessage;
                 while ((clientMessage = in.readLine()) != null) {
-                    String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
-                    String formattedMessage = "[" + timestamp + "] [" + nickname + "]: " + clientMessage;
-                    System.out.println(formattedMessage);
-                    broadcast(formattedMessage, this);
+                    if (clientMessage.startsWith("/pm ")) {
+                        handlePrivateMessage(clientMessage);
+                    } else {
+                        String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                        String formattedMessage = "[" + timestamp + "] [" + nickname + "]: " + clientMessage;
+                        System.out.println(formattedMessage);
+                        broadcast(formattedMessage, this);
+                    }
                 }
 
             } catch (IOException e) {
@@ -99,6 +120,33 @@ public class Server {
                     System.err.println("Socket close failed: " + e.getMessage());
                 }
                 removeClient(this);
+            }
+        }
+
+        private void handlePrivateMessage(String message) {
+            String[] parts = message.split(" ", 3);
+            if (parts.length < 3) {
+                sendMessage("[System] Invalid /pm command. Use: /pm <user> <message>");
+                return;
+            }
+
+            String targetUser = parts[1];
+            String privateMsg = parts[2];
+            ClientHandler targetClient = null;
+
+            for (ClientHandler client : clients) {
+                if (client.getNickname().equalsIgnoreCase(targetUser)) {
+                    targetClient = client;
+                    break;
+                }
+            }
+
+            if (targetClient == null) {
+                sendMessage("[System] User '" + targetUser + "' not found.");
+            } else {
+                String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                targetClient.sendMessage("[" + timestamp + "] [PM from " + nickname + "]: " + privateMsg);
+                sendMessage("[" + timestamp + "] [PM to " + targetUser + "]: " + privateMsg);
             }
         }
     }

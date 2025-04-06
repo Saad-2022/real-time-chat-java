@@ -31,23 +31,19 @@ public class ChatGUIClient extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Chat area
         chatArea = new JTextArea();
         chatArea.setEditable(false);
         chatArea.setLineWrap(true);
         JScrollPane chatScroll = new JScrollPane(chatArea);
 
-        // Message input
         inputField = new JTextField();
         inputField.setEnabled(false);
         inputField.addActionListener(e -> sendMessage());
 
-        // Nickname field
         nicknameField = new JTextField();
         nicknameField.setPreferredSize(new Dimension(100, 25));
         nicknameField.setToolTipText("Nickname");
 
-        // Buttons
         connectButton = new JButton("Connect");
         connectButton.addActionListener(e -> connectToServer());
 
@@ -55,7 +51,6 @@ public class ChatGUIClient extends JFrame {
         disconnectButton.setEnabled(false);
         disconnectButton.addActionListener(e -> disconnectFromServer());
 
-        // Top bar with nickname and buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(nicknameField, BorderLayout.CENTER);
 
@@ -64,18 +59,15 @@ public class ChatGUIClient extends JFrame {
         buttonPanel.add(disconnectButton);
         topPanel.add(buttonPanel, BorderLayout.EAST);
 
-        // User list panel
         userListModel = new DefaultListModel<>();
         userList = new JList<>(userListModel);
         userList.setBorder(BorderFactory.createTitledBorder("Active Users"));
         userList.setPreferredSize(new Dimension(120, 0));
 
-        // Center layout
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(chatScroll, BorderLayout.CENTER);
         centerPanel.add(userList, BorderLayout.EAST);
 
-        // Assemble layout
         add(topPanel, BorderLayout.NORTH);
         add(centerPanel, BorderLayout.CENTER);
         add(inputField, BorderLayout.SOUTH);
@@ -108,9 +100,10 @@ public class ChatGUIClient extends JFrame {
                     while ((message = in.readLine()) != null) {
                         if (message.startsWith("/users:")) {
                             updateUserList(message.substring(7));
+                        } else if (message.contains("[PM from") || message.contains("[PM to")) {
+                            appendStyled(message, Color.MAGENTA);
                         } else {
-                            String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
-                            chatArea.append("[" + timestamp + "] " + message + "\n");
+                            appendStyled(message, Color.BLACK);
                         }
                     }
                 } catch (IOException e) {
@@ -169,6 +162,15 @@ public class ChatGUIClient extends JFrame {
         });
     }
 
+    private void appendStyled(String message, Color color) {
+        SwingUtilities.invokeLater(() -> {
+            chatArea.setForeground(color);
+            chatArea.append(message + "\n");
+            chatArea.setCaretPosition(chatArea.getDocument().getLength());
+            chatArea.setForeground(Color.BLACK);
+        });
+    }
+
     private void showMessage(String message) {
         chatArea.append("[System] " + message + "\n");
     }
@@ -177,3 +179,4 @@ public class ChatGUIClient extends JFrame {
         SwingUtilities.invokeLater(ChatGUIClient::new);
     }
 }
+
