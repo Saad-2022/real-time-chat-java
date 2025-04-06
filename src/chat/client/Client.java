@@ -5,6 +5,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class Client{
     private JFrame frame;
@@ -51,17 +54,18 @@ public class Client{
         inputField.addActionListener(e -> sendMessage());
     }
     private void sendUsername(){
-        try {
+        try{
             bufferedWriter.write(username);
             bufferedWriter.newLine();
             bufferedWriter.flush();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             closeEverything();
         }
     }
     private void sendMessage(){
         String message = inputField.getText();
-        if (!message.isEmpty()){
+        if(!message.isEmpty()){
             try{
                 String fullMessage = username + ": " + message;
                 bufferedWriter.write(fullMessage);
@@ -70,7 +74,8 @@ public class Client{
 
                 chatArea.append(fullMessage + "\n"); // 👈 Add this line
                 inputField.setText("");
-            } catch (IOException e){
+            }
+            catch (IOException e){
                 closeEverything();
             }
         }
@@ -81,7 +86,7 @@ public class Client{
             while (socket.isConnected()){
                 try{
                     msg = bufferedReader.readLine();
-                    if (msg != null) {
+                    if(msg != null){
                         chatArea.append(msg + "\n");
                     }
                 }
@@ -102,14 +107,54 @@ public class Client{
             e.printStackTrace();
         }
     }
-    public static void main(String[] args){
-        String username = JOptionPane.showInputDialog(null, "Enter your username:");
+    private static boolean isValidLogin(String username, String password) {
         try{
-            Socket socket = new Socket("localhost", 50000);
-            SwingUtilities.invokeLater(() -> new Client(username, socket));
+            List<String> lines = Files.readAllLines(Paths.get("login.csv"));
+            for(String line : lines.subList(1, lines.size())){
+                String[] parts = line.split(",");
+                if (parts.length == 2){
+                    if (parts[0].equals(username) && parts[1].equals(password)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error reading login.csv");
         }
-        catch (IOException e){
-            JOptionPane.showMessageDialog(null, "Unable to connect to the server.");
+        return false;
+    }
+    public static void main(String[] args) {
+        String username = null;
+        String password = null;
+
+        JPanel panel = new JPanel(new GridLayout(2, 2, 5, 5));
+        JTextField userField = new JTextField();
+        JPasswordField passField = new JPasswordField();
+
+        panel.add(new JLabel("Username:"));
+        panel.add(userField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passField);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if(result == JOptionPane.OK_OPTION){
+            username = userField.getText().trim();
+            password = new String(passField.getPassword()).trim();
+
+            if(!isValidLogin(username, password)){
+                JOptionPane.showMessageDialog(null, "Invalid login. Exiting.");
+                System.exit(0);
+            }
+
+            try{
+                Socket socket = new Socket("localhost", 50000);
+                String finalUsername = username;
+                SwingUtilities.invokeLater(() -> new Client(finalUsername, socket));
+            }
+            catch(IOException e){
+                JOptionPane.showMessageDialog(null, "Unable to connect to server.");
+            }
         }
     }
 }
