@@ -1,16 +1,4 @@
 # real-time-chat-java
-A Java-based real-time text chat application.
+Instructions: Run server, run client as many times as you want
 
-Project Title
-
-Description
-
-Features
-
-How to run
-
-Tech stack
-
-Contribution guide
-
-License info
+#Pics
