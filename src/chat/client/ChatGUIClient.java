@@ -9,11 +9,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class ChatGUIClient extends JFrame {
+
     private JTextArea chatArea;
     private JTextField inputField;
     private JTextField nicknameField;
     private JButton connectButton;
     private JButton disconnectButton;
+
+    private DefaultListModel<String> userListModel;
+    private JList<String> userList;
 
     private Socket socket;
     private BufferedReader in;
@@ -22,24 +26,28 @@ public class ChatGUIClient extends JFrame {
     private volatile boolean connected = false;
 
     public ChatGUIClient() {
-        setTitle("Chat Client");
-        setSize(500, 400);
+        setTitle("Java Swing Chat Client");
+        setSize(600, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        // Chat area
         chatArea = new JTextArea();
         chatArea.setEditable(false);
         chatArea.setLineWrap(true);
         JScrollPane chatScroll = new JScrollPane(chatArea);
 
+        // Message input
         inputField = new JTextField();
         inputField.setEnabled(false);
         inputField.addActionListener(e -> sendMessage());
 
+        // Nickname field
         nicknameField = new JTextField();
         nicknameField.setPreferredSize(new Dimension(100, 25));
         nicknameField.setToolTipText("Nickname");
 
+        // Buttons
         connectButton = new JButton("Connect");
         connectButton.addActionListener(e -> connectToServer());
 
@@ -47,6 +55,7 @@ public class ChatGUIClient extends JFrame {
         disconnectButton.setEnabled(false);
         disconnectButton.addActionListener(e -> disconnectFromServer());
 
+        // Top bar with nickname and buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(nicknameField, BorderLayout.CENTER);
 
@@ -55,8 +64,20 @@ public class ChatGUIClient extends JFrame {
         buttonPanel.add(disconnectButton);
         topPanel.add(buttonPanel, BorderLayout.EAST);
 
+        // User list panel
+        userListModel = new DefaultListModel<>();
+        userList = new JList<>(userListModel);
+        userList.setBorder(BorderFactory.createTitledBorder("Active Users"));
+        userList.setPreferredSize(new Dimension(120, 0));
+
+        // Center layout
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(chatScroll, BorderLayout.CENTER);
+        centerPanel.add(userList, BorderLayout.EAST);
+
+        // Assemble layout
         add(topPanel, BorderLayout.NORTH);
-        add(chatScroll, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
         add(inputField, BorderLayout.SOUTH);
 
         setVisible(true);
@@ -74,7 +95,7 @@ public class ChatGUIClient extends JFrame {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
-            out.println(nickname); // Send nickname to server
+            out.println(nickname);
             connected = true;
             inputField.setEnabled(true);
             nicknameField.setEnabled(false);
@@ -82,15 +103,19 @@ public class ChatGUIClient extends JFrame {
             disconnectButton.setEnabled(true);
 
             messageListener = new Thread(() -> {
-                String serverMessage;
                 try {
-                    while ((serverMessage = in.readLine()) != null) {
-                        String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
-                        chatArea.append("[" + timestamp + "] " + serverMessage + "\n");
+                    String message;
+                    while ((message = in.readLine()) != null) {
+                        if (message.startsWith("/users:")) {
+                            updateUserList(message.substring(7));
+                        } else {
+                            String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                            chatArea.append("[" + timestamp + "] " + message + "\n");
+                        }
                     }
                 } catch (IOException e) {
                     if (connected) {
-                        showMessage("Connection lost.");
+                        showMessage("Disconnected from server.");
                         disconnectFromServer();
                     }
                 }
@@ -130,7 +155,18 @@ public class ChatGUIClient extends JFrame {
         nicknameField.setEnabled(true);
         connectButton.setEnabled(true);
         disconnectButton.setEnabled(false);
+        userListModel.clear();
         showMessage("Disconnected from chat.");
+    }
+
+    private void updateUserList(String rawUserList) {
+        SwingUtilities.invokeLater(() -> {
+            userListModel.clear();
+            String[] users = rawUserList.split(",");
+            for (String user : users) {
+                userListModel.addElement(user);
+            }
+        });
     }
 
     private void showMessage(String message) {
@@ -141,4 +177,3 @@ public class ChatGUIClient extends JFrame {
         SwingUtilities.invokeLater(ChatGUIClient::new);
     }
 }
-
