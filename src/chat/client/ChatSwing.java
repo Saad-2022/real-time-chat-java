@@ -3,13 +3,13 @@ package chat.client;
 import chat.common.Message;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.border.Border;
 
 public class ChatSwing extends JFrame {
     private JPanel avatarPanel;
@@ -22,6 +22,9 @@ public class ChatSwing extends JFrame {
     private PrintWriter out;
     private BufferedReader in;
     private String username;
+
+    private boolean isDarkMode = false;
+    private JButton themeToggleButton;
 
     public ChatSwing() {
         username = promptUsername();
@@ -58,15 +61,19 @@ public class ChatSwing extends JFrame {
         centerPanel.add(avatarPanel, BorderLayout.NORTH);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Input Field, Emoji Button, Send Button
+        // Input Field
         inputField = new JTextField();
         sendButton = new JButton("Send");
+
+        // Theme Mode Toggle
+        themeToggleButton = new JButton(" 🌙 Dark Mode");
+        themeToggleButton.addActionListener(e -> toggleTheme());
 
         // Emoji Button
         JButton emojiButton = new JButton("😊");
         emojiButton.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
         emojiButton.setFocusPainted(false);
-        emojiButton.addActionListener(e -> showEmojiPicker()); // opens popup panel
+        emojiButton.addActionListener(e -> showEmojiPicker());
 
         // Input panel layout
         JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
@@ -78,10 +85,15 @@ public class ChatSwing extends JFrame {
         sendButton.addActionListener(e -> sendMessage());
         inputField.addActionListener(e -> sendMessage());
 
+        // Bottom Button Row
+        JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomRow.add(themeToggleButton);
+
         // Final Layout
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(centerPanel, BorderLayout.CENTER);
         getContentPane().add(inputPanel, BorderLayout.SOUTH);
+        getContentPane().add(bottomRow, BorderLayout.NORTH);
 
         setVisible(true);
     }
@@ -105,16 +117,15 @@ public class ChatSwing extends JFrame {
                             if (finalMsg.startsWith("JOIN ")) {
                                 String user = finalMsg.substring(5);
                                 addUserAvatar(user);
-                            } else if (finalMsg.startsWith("LEAVE ")) {
-                                String user = finalMsg.substring(6);
-                                removeUserAvatar(user);
+                            } else if (finalMsg.startsWith("[PM from") || finalMsg.startsWith("[PM to")) {
+                                addPrivateMessage(finalMsg);
                             } else {
-                                // Don't show your own message again if it's from yourself
-                                if (!finalMsg.startsWith(username + " [")) {
-                                    addMessage(finalMsg, false);
-                                }
+                            if (!finalMsg.startsWith(username + " [")) {
+                                addMessage(finalMsg, false);
                             }
-                        });
+                        }
+
+                    });
                     }
                 } catch (IOException e) {
                     SwingUtilities.invokeLater(() -> addMessage("[Disconnected from server]", false));
@@ -145,7 +156,6 @@ public class ChatSwing extends JFrame {
         bubbleWrapper.setOpaque(false);
         bubbleWrapper.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        // Bubble label
         JLabel bubble = new JLabel("<html><p style='width: 300px;'>" + text + "</p></html>");
         bubble.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
         bubble.setOpaque(true);
@@ -156,11 +166,9 @@ public class ChatSwing extends JFrame {
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
 
-        // Reaction label (empty at first)
         JLabel reactionLabel = new JLabel(" ");
         reactionLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
 
-        // Show reaction picker when clicking on the bubble
         bubble.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -169,16 +177,13 @@ public class ChatSwing extends JFrame {
                 for (String emoji : reactions) {
                     JMenuItem item = new JMenuItem(emoji);
                     item.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
-                    item.addActionListener(ev -> {
-                        reactionLabel.setText(emoji);
-                    });
+                    item.addActionListener(ev -> reactionLabel.setText(emoji));
                     reactionMenu.add(item);
                 }
                 reactionMenu.show(bubble, e.getX(), e.getY());
             }
         });
 
-        // Container to hold both message and its reaction
         JPanel messageWithReaction = new JPanel();
         messageWithReaction.setLayout(new BorderLayout());
         messageWithReaction.setOpaque(false);
@@ -190,10 +195,70 @@ public class ChatSwing extends JFrame {
         messagePanel.revalidate();
         messagePanel.repaint();
 
-        // Auto-scroll
         SwingUtilities.invokeLater(() ->
                 scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum())
         );
+    }
+    private void addPrivateMessage(String text) {
+        JPanel bubbleWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bubbleWrapper.setOpaque(false);
+        bubbleWrapper.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+        JLabel bubble = new JLabel("<html><p style='width: 300px;'>" + text + "</p></html>");
+        bubble.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+        bubble.setOpaque(true);
+        bubble.setBackground(new Color(220, 180, 255)); // Purple for private messages
+        bubble.setForeground(Color.BLACK);
+        bubble.setBorder(BorderFactory.createCompoundBorder(
+                new RoundedBorder(15),
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+
+        bubbleWrapper.add(bubble);
+        messagePanel.add(bubbleWrapper);
+        messagePanel.revalidate();
+        messagePanel.repaint();
+
+        SwingUtilities.invokeLater(() ->
+                scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum())
+        );
+    }
+
+    private void toggleTheme() {
+        isDarkMode = !isDarkMode;
+
+        Color bg = isDarkMode ? new Color(34, 34, 34) : Color.WHITE;
+        Color fg = isDarkMode ? Color.WHITE : Color.BLACK;
+        Color bubbleBgOwn = isDarkMode ? new Color(66, 135, 245) : new Color(179, 229, 252);
+        Color bubbleBgOther = isDarkMode ? new Color(80, 80, 80) : new Color(230, 230, 230);
+
+        getContentPane().setBackground(bg);
+        avatarPanel.setBackground(bg);
+        messagePanel.setBackground(bg);
+
+        // Update all bubbles and reactions
+        for (Component comp : messagePanel.getComponents()) {
+            if (comp instanceof JPanel bubbleWrapper) {
+                for (Component inner : bubbleWrapper.getComponents()) {
+                    if (inner instanceof JPanel messageWithReaction) {
+                        for (Component msgComp : messageWithReaction.getComponents()) {
+                            if (msgComp instanceof JLabel label) {
+                                boolean isOwn = ((FlowLayout) bubbleWrapper.getLayout()).getAlignment() == FlowLayout.RIGHT;
+                                label.setBackground(isOwn ? bubbleBgOwn : bubbleBgOther);
+                                label.setForeground(fg);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        inputField.setBackground(bg);
+        inputField.setForeground(fg);
+        inputField.setCaretColor(fg);
+        themeToggleButton.setText(isDarkMode ? " ☀️ Light Mode" : " 🌙 Dark Mode");
+
+        repaint();
     }
 
     private void addUserAvatar(String user) {
@@ -273,6 +338,7 @@ public class ChatSwing extends JFrame {
     }
 }
 
+// --- Rounded Bubble Border ---
 class RoundedBorder implements Border {
     private int radius;
 
@@ -281,7 +347,7 @@ class RoundedBorder implements Border {
     }
 
     public Insets getBorderInsets(Component c) {
-        return new Insets(this.radius+1, this.radius+1, this.radius+2, this.radius);
+        return new Insets(radius + 1, radius + 1, radius + 2, radius);
     }
 
     public boolean isBorderOpaque() {
