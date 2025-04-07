@@ -9,10 +9,11 @@ to join a server and communication in a clean, modern environment.
 * Real-time messaging between multiple users
 * Bubble-style chat UI with left/right alignment
 * Emoji picker with popup panel
-* Message reactions (click on any message to react
+* Message reactions (click on any message to react)
 * Avatar initials for each user
 * "Users Online" panel that updates in real-time as users join
 * Portable .jar packaging for each sharing and running
+* Private messaging between users (Type "/pm User Hello")
 
 **How to run**\
 1. Start the server:\
