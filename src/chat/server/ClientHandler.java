@@ -23,10 +23,9 @@ public class ClientHandler implements Runnable {
             // First message from client should be username
             this.username = in.readLine();
 
-            sendUserList(); // send existing users to the new client
-            broadcast("JOIN " + username); // send JOIN signal to all clients (for avatar)
+            sendUserList();
+            broadcast("JOIN " + username);
             broadcastSystemMessage("[System] " + username + " has joined the chat.");
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -37,15 +36,20 @@ public class ClientHandler implements Runnable {
         String msg;
         try {
             while ((msg = in.readLine()) != null) {
-                Message message = new Message(username, msg);
-                broadcast(message.format());
+                if (msg.startsWith("/pm ")) {
+                    handlePrivateMessage(msg);
+                } else {
+                    Message message = new Message(username, msg);
+                    broadcast(message.format());
+                }
             }
         } catch (IOException e) {
             System.out.println(username + " disconnected.");
         } finally {
             try {
                 socket.close();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+            }
 
             clients.remove(this);
             broadcast("LEAVE " + username);
@@ -53,10 +57,29 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private void handlePrivateMessage(String message) {
+        String[] parts = message.split(" ", 3);
+        if (parts.length < 3) {
+            out.println("[System] Usage: /pm <user> <message>");
+            return;
+        }
+        String targetUsername = parts[1];
+        String privateMsg = parts[2];
+
+        for (ClientHandler client : clients) {
+            if (client.username.equalsIgnoreCase(targetUsername)) {
+                client.out.println("[PM from " + username + "] " + privateMsg);
+                this.out.println("[PM to " + targetUsername + "] " + privateMsg);
+                return;
+            }
+        }
+        out.println("[System] User not found: " + targetUsername);
+    }
+
     private void sendUserList() {
         for (ClientHandler client : clients) {
             if (!client.username.equals(this.username)) {
-                out.println("JOIN " + client.username); // send other users to the new client
+                out.println("JOIN " + client.username);
             }
         }
     }
