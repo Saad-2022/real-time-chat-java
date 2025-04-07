@@ -16,7 +16,7 @@ to join a server and communication in a clean, modern environment.
 
 **How to run**\
 1. Start the server:\
-```java -jar ChatServer.jar```\
+```java -cp out chat.server.Server```\
 You should see:\
 Server started. Waiting for clients...
 
