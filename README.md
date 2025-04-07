@@ -71,8 +71,8 @@ Vithuran Kankatharan: Reaction & Packaging Specialist
 * Created the run instructions and user setup guide
 
 **Screenshots**\
-![img.png](img.png)
-![img_1.png](img_1.png)
+![image](https://github.com/user-attachments/assets/056ebb6e-cf17-4dcb-840b-8a505001e2e9)
+
 
 **License info**\
 © 2025 Saad Siddiqui. All rights reserved.  
